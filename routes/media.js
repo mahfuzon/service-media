@@ -6,7 +6,22 @@ const isBase64 = require('is-base64');
 const {Media} = require('../models');
 
 /* GET users listing. */
-router.post('/', function (req, res, next) {
+router.get('/', async (req, res, next) => {
+  const data = await Media.findAll({attributes: ['id', 'image']});
+
+  dataMap = data.map((d)=>{
+    d.image = `${req.get('host')}/${d.image}`;
+    return d;
+  });
+
+  return res.json({
+    status : "success",
+    data : dataMap
+  });
+  
+});
+
+router.post('/', (req, res, next) => {
   const image = req.body.image;
 
   if (!isBase64(image, {
@@ -18,7 +33,7 @@ router.post('/', function (req, res, next) {
     });
   }
 
-  base64Img.img(image, './public/images', Date.now(), async (err, filepath) => {
+  base64Img.img(image, './public/images', new Date().getTime(), async(err, filepath) => {
     if (err) {
       return res.status(400).json({
         status: "error",
