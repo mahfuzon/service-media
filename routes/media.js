@@ -2,10 +2,37 @@ const express = require('express');
 const router = express.Router();
 const base64Img = require('base64-img');
 const isBase64 = require('is-base64');
+const fs = require('fs-extra');
 
 const {Media} = require('../models');
 
-/* GET users listing. */
+router.delete('/:id', async(req, res, next)=>{
+  const id = req.params.id;
+  const data = await Media.findByPk(id);
+
+  if(!data){
+    return res.status(404).json({
+      status: "error",
+      message: "data not found"
+    });
+  }
+
+  fs.remove(`./public/images/${data.image.split('/').pop()}`, async(err)=>{
+    if(err){
+      return res.status(400).json({
+        status:"error",
+        message: err.message
+      });
+    }
+    await data.destroy();
+  });
+
+  return res.json({
+    status: "success",
+    message: "data deleted"
+  });
+});
+
 router.get('/', async (req, res, next) => {
   const data = await Media.findAll({attributes: ['id', 'image']});
 
